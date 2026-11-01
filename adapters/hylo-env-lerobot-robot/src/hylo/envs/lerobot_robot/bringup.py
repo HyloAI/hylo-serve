@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from worldcurrent.core.agent import AgentBase, AgentSpec
-from worldcurrent.core.types import ActionChunk, ActionSemantics, Observation
+from hylo.core.agent import AgentBase, AgentSpec
+from hylo.core.types import ActionChunk, ActionSemantics, Observation
 
 
 class BringupWave(AgentBase):

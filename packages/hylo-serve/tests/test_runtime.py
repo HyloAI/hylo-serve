@@ -2,13 +2,13 @@ import threading
 
 import pytest
 
-from worldcurrent.eval.experiment import run_experiment
-from worldcurrent.core.config import ExperimentConfig
-from worldcurrent.core.errors import SafetyAbort
-from worldcurrent.core.registry import registry
-from worldcurrent.core.task import TaskInstance
-from worldcurrent.core.trace import TraceStore
-from worldcurrent.serve.runtime import OperatorChannel, RealtimeConfig, RealtimeEpisodeRunner
+from hylo.eval.experiment import run_experiment
+from hylo.core.config import ExperimentConfig
+from hylo.core.errors import SafetyAbort
+from hylo.core.registry import registry
+from hylo.core.task import TaskInstance
+from hylo.core.trace import TraceStore
+from hylo.serve.runtime import OperatorChannel, RealtimeConfig, RealtimeEpisodeRunner
 
 CFG = ExperimentConfig(name="rt", benchmark={"type": "testing/reach-v0", "params": {"tags": ["reach"]}},
                        env={"type": "testing.point_reach"}, agent={"type": "testing.p_controller", "params": {"kp": 2.0}})

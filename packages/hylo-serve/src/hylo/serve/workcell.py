@@ -2,20 +2,20 @@
 
 It owns the environment, the SafetyShield, the real-time runner and the trace, so safety never depends on the
 network: if the policy server stalls the robot holds and the watchdog aborts; an e-stop is latched here until an
-operator clears it. The policy is reached over the network (`policy.protocol`: "wc" = worldcurrent agent protocol,
+operator clears it. The policy is reached over the network (`policy.protocol`: "hylo" = the Hylo agent protocol,
 "openpi" = openpi's). Episodes are recorded as an ordinary run (split `deployment` by default, which no learner
 reads unless asked) so replay, judges and the catalog work on them.
 
-    wc serve workcell --config workcell.yaml --port 8100
+    hylo serve workcell --config workcell.yaml --port 8100
 
     name: sim-libero
     env: {type: libero, remote: {...}}                     # any env plugin: a simulator or a robot adapter
     benchmark: {type: libero, params: {suite: libero_10}}  # optional: named tasks and init states
-    policy: {url: "ws://gpu:8000/wc", protocol: wc}
+    policy: {url: "ws://gpu:8000/hylo", protocol: hylo}
     runtime: {clock: wall, refill_steps: 10, max_hold_steps: 40, require_reset_confirm: true, verdict_timeout_s: 60}
     safety: {max_delta: 0.5}
 
-HTTP API: wc.workcell/v0.1 (core.remote.workcell): GET /healthz, GET /status, POST /episodes, POST /operator,
+HTTP API: hylo.workcell/v0.1 (core.remote.workcell): GET /healthz, GET /status, POST /episodes, POST /operator,
 WS /events (live stream).
 """
 
@@ -35,13 +35,13 @@ from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconn
 from fastapi.responses import JSONResponse
 from pydantic import Field, ValidationError
 
-from worldcurrent.core.config import ComponentRef, EnvRef
-from worldcurrent.core.contract import Contract, JsonAny
-from worldcurrent.core.events import Event, EventBus
-from worldcurrent.core.registry import registry
-from worldcurrent.core.remote.workcell import OperatorAck, OperatorEvent, PolicyEndpoint, StartEpisode
-from worldcurrent.core.task import TaskInstance, TaskSpec
-from worldcurrent.core.trace import TraceStore
+from hylo.core.config import ComponentRef, EnvRef
+from hylo.core.contract import Contract, JsonAny
+from hylo.core.events import Event, EventBus
+from hylo.core.registry import registry
+from hylo.core.remote.workcell import OperatorAck, OperatorEvent, PolicyEndpoint, StartEpisode
+from hylo.core.task import TaskInstance, TaskSpec
+from hylo.core.trace import TraceStore
 
 from .runtime import OperatorChannel, RealtimeConfig, RealtimeEpisodeRunner
 
@@ -158,7 +158,7 @@ class Workcell:
     def _build_env(self) -> Any:
         spec = self.cfg.env
         if spec.remote is not None:                   # the env lives in its own venv (simulators, robot SDKs)
-            from worldcurrent.core.remote.client import RemoteEnvironment
+            from hylo.core.remote.client import RemoteEnvironment
 
             return RemoteEnvironment(registry.reference("envs", spec.type), spec.params, python=spec.remote.python,
                                      env=spec.remote.env, runtime=spec.remote.runtime)
@@ -200,7 +200,7 @@ class Workcell:
             override = (req.get("instruction") or "").strip() if req.get("task_id") else None
             self.status = {"state": "starting", "episode": None, "task": task.spec.id, "policy": policy.url,
                            "last": self.status.get("last")}
-            self._thread = threading.Thread(target=self._run, args=(task, policy, override), daemon=True, name="wc-episode")
+            self._thread = threading.Thread(target=self._run, args=(task, policy, override), daemon=True, name="hylo-episode")
             self._thread.start()
             return {"task_id": task.spec.id, "policy": policy.url}
 
@@ -242,7 +242,7 @@ class Workcell:
         """Keep evallog.json / manifest.json current so the episode is a normal run for replay and the catalog."""
         man = self.run_dir / "manifest.json"
         if not man.exists():
-            man.write_text(json.dumps({"run_id": self.run_dir.name, "schema_version": "wc.workcell/v0.1", "created_at": time.time(),
+            man.write_text(json.dumps({"run_id": self.run_dir.name, "schema_version": "hylo.workcell/v0.1", "created_at": time.time(),
                                        "benchmark": {"id": f"workcell/{self.cfg.name}", "split": self.cfg.split},
                                        "config": {"name": f"workcell-{self.cfg.name}", "env": self.cfg.env.model_dump(mode="json")}},
                                       indent=2, default=str))
@@ -271,9 +271,9 @@ class Workcell:
 
 
 def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
-    app = FastAPI(title=f"worldcurrent workcell {cfg.name}")
-    wc = Workcell(cfg)
-    app.state.workcell = wc
+    app = FastAPI(title=f"Hylo workcell {cfg.name}")
+    cell = Workcell(cfg)
+    app.state.workcell = cell
 
     @app.middleware("http")
     async def auth(request: Request, call_next):
@@ -294,7 +294,7 @@ def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
                 tasks = sorted({i.spec.id: i.spec.instruction for i in bench.instances("validation")}.items())
             except Exception:  # noqa: BLE001
                 tasks = None
-        return {"name": cfg.name, **_num(wc.status), "fault": wc.operator.fault, "run_id": wc.run_dir.name,
+        return {"name": cfg.name, **_num(cell.status), "fault": cell.operator.fault, "run_id": cell.run_dir.name,
                 "policy": cfg.policy.model_dump() if cfg.policy else None, "split": cfg.split,
                 "runtime": cfg.runtime.model_dump(mode="json"), "tasks": tasks}
 
@@ -305,7 +305,7 @@ def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
         except ValidationError as exc:
             raise HTTPException(400, str(exc))
         try:
-            return wc.start(req.model_dump(mode="json", exclude_none=True))
+            return cell.start(req.model_dump(mode="json", exclude_none=True))
         except (RuntimeError, ValueError) as exc:
             raise HTTPException(409, str(exc))
 
@@ -313,14 +313,14 @@ def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
     def operator(body: dict[str, Any]) -> dict[str, Any]:
         try:
             event = OperatorEvent.model_validate(body)
-            wc.operator.post(event.model_dump(mode="json", exclude_none=True))
+            cell.operator.post(event.model_dump(mode="json", exclude_none=True))
         except (ValidationError, ValueError) as exc:
             raise HTTPException(400, str(exc))
-        if event.type == "clear_fault" and wc.status.get("state") == "fault":
-            wc.status["state"] = "idle"
+        if event.type == "clear_fault" and cell.status.get("state") == "fault":
+            cell.status["state"] = "idle"
         if event.type == "estop":
-            wc.status["state"] = "fault"
-        return OperatorAck(fault=wc.operator.fault, state=wc.status.get("state")).model_dump()
+            cell.status["state"] = "fault"
+        return OperatorAck(fault=cell.operator.fault, state=cell.status.get("state")).model_dump()
 
     @app.websocket("/events")
     async def events(ws: WebSocket) -> None:
@@ -328,18 +328,18 @@ def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
             await ws.close(code=4401)
             return
         await ws.accept()
-        q = wc.subscribe(asyncio.get_running_loop())
+        q = cell.subscribe(asyncio.get_running_loop())
         try:
             while True:
                 await ws.send_json(await q.get())
         except (WebSocketDisconnect, RuntimeError):
             pass
         finally:
-            wc.unsubscribe(q)
+            cell.unsubscribe(q)
 
     @app.on_event("shutdown")
     def _close() -> None:
-        wc.close()
+        cell.close()
 
     return app
 

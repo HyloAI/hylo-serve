@@ -13,10 +13,10 @@ from typing import Any, Literal, Mapping
 
 from pydantic import Field
 
-from worldcurrent.core.events import EventBus
-from worldcurrent.core.kernel import ABSOLUTE_MODES, EpisodeRunner, OperatorChannel, Timing, hold_action
-from worldcurrent.core.task import TaskInstance
-from worldcurrent.core.trace import TraceStore
+from hylo.core.events import EventBus
+from hylo.core.kernel import ABSOLUTE_MODES, EpisodeRunner, OperatorChannel, Timing, hold_action
+from hylo.core.task import TaskInstance
+from hylo.core.trace import TraceStore
 
 
 class RealtimeConfig(Timing):

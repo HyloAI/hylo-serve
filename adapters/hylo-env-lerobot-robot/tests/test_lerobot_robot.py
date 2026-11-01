@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from worldcurrent.core.agent import AgentBase, AgentSpec
-from worldcurrent.core.task import TaskInstance, TaskSpec
-from worldcurrent.core.types import ActionChunk, ActionSemantics
-from worldcurrent.envs.lerobot_robot.env import LeRobotRobotEnvironment
-from worldcurrent.serve.runtime import RealtimeConfig, RealtimeEpisodeRunner
-from worldcurrent.testing.conformance import check_environment
+from hylo.core.agent import AgentBase, AgentSpec
+from hylo.core.task import TaskInstance, TaskSpec
+from hylo.core.types import ActionChunk, ActionSemantics
+from hylo.envs.lerobot_robot.env import LeRobotRobotEnvironment
+from hylo.serve.runtime import RealtimeConfig, RealtimeEpisodeRunner
+from hylo.testing.conformance import check_environment
 
 LIMITS = {"action_low": [-120, -120, -120, -120, -170, 0], "action_high": [120, 120, 120, 120, 170, 100]}
 TASK = TaskInstance(spec=TaskSpec(id="arm/wave", version="1", instruction="wave", max_steps=40), seed=0)

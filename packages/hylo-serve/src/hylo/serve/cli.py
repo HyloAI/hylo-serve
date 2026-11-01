@@ -1,6 +1,6 @@
-"""wc serve policy | workcell | env | agent: start a serving role (policy.py, workcell.py) or one component.
+"""hylo serve policy | workcell | env | agent: start a serving role (policy.py, workcell.py) or one component.
 
-Registered as the `serve` subcommand of `wc` (core.cli). `env` / `agent` serve a single plugin over WebSocket
+Registered as the `serve` subcommand of `hylo` (core.cli). `env` / `agent` serve a single plugin over WebSocket
 (core.remote.ws), e.g. a simulator in its own venv.
 """
 
@@ -14,11 +14,11 @@ from typing import Sequence
 def main(argv: Sequence[str]) -> int:
     """serve a policy, a workcell, or one env / agent component"""
     if argv and argv[0] in ("env", "agent"):
-        from worldcurrent.core.remote import ws
+        from hylo.core.remote import ws
 
         return ws.main(list(argv))
-    ap = argparse.ArgumentParser(prog="wc serve", epilog="also: wc serve env|agent ... serves one environment or agent "
-                                                       "plugin over WebSocket (wc serve env --help)")
+    ap = argparse.ArgumentParser(prog="hylo serve", epilog="also: hylo serve env|agent ... serves one environment or agent "
+                                                       "plugin over WebSocket (hylo serve env --help)")
     sub = ap.add_subparsers(dest="role", required=True)
     p = sub.add_parser("policy", help="serve an agent over /wc and /openpi")
     src = p.add_mutually_exclusive_group(required=True)
@@ -30,7 +30,7 @@ def main(argv: Sequence[str]) -> int:
     p.add_argument("--token", help="require 'Authorization: Bearer <token>' (or openpi's 'Api-Key <token>')")
     p.add_argument("--openpi-inputs", default="libero", help="preset name or JSON mapping of openpi keys to observation fields")
     w = sub.add_parser("workcell", help="run episodes next to a robot / simulator with a remote policy")
-    w.add_argument("--config", required=True, help="workcell config (YAML or JSON), see worldcurrent.serve.workcell")
+    w.add_argument("--config", required=True, help="workcell config (YAML or JSON), see hylo.serve.workcell")
     w.add_argument("--host", default="127.0.0.1")
     w.add_argument("--port", type=int, default=8100)
     w.add_argument("--token")

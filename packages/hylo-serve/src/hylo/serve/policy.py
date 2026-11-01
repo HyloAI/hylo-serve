@@ -1,7 +1,7 @@
-"""Policy server (S1): any worldcurrent agent as a network service, for robots and for other harnesses.
+"""Policy server (S1): any Hylo agent as a network service, for robots and for other harnesses.
 
 One WebSocket server, two protocols, chosen by path:
-- `/wc`      the worldcurrent agent protocol (wc.agentserver/v0.1, JSON): spec / reset / act / on_step /
+- `/hylo`      the Hylo agent protocol (hylo.agentserver/v0.1, JSON): spec / reset / act / on_step /
              on_episode_end. `reset` carries the client's EnvSpec and the session is refused there, before any
              motion, if the agent is not compatible with it (core.compat). Client: core.remote.ws.WSAgent.
 - `/openpi`  openpi's protocol (msgpack-numpy): the server sends its metadata, then answers every observation dict
@@ -15,7 +15,7 @@ admission). The agent is built once and reused across sessions. With `campaign`,
 campaign's active version through its active.json (core.deployment): between sessions, never during one, it
 rebuilds the agent when a promotion or rollback changed it.
 
-    wc serve policy --agent '{"type": "lerobot.steered", ...}'      # or --config EXP.yaml / --campaign DIR
+    hylo serve policy --agent '{"type": "lerobot.steered", ...}'      # or --config EXP.yaml / --campaign DIR
 """
 
 from __future__ import annotations
@@ -32,15 +32,15 @@ from typing import Any, Callable
 
 import numpy as np
 
-from worldcurrent.core.agent import AgentSpec, EpisodeContext
-from worldcurrent.core.compat import check_compatibility
-from worldcurrent.core.config import ExperimentConfig
-from worldcurrent.core.deployment import read_active
-from worldcurrent.core.registry import registry
-from worldcurrent.core.remote import wire
-from worldcurrent.core.remote.handlers import AgentHandler
-from worldcurrent.core.task import TaskInstance, TaskSpec
-from worldcurrent.core.types import EnvSpec, Observation
+from hylo.core.agent import AgentSpec, EpisodeContext
+from hylo.core.compat import check_compatibility
+from hylo.core.config import ExperimentConfig
+from hylo.core.deployment import read_active
+from hylo.core.registry import registry
+from hylo.core.remote import wire
+from hylo.core.remote.handlers import AgentHandler
+from hylo.core.task import TaskInstance, TaskSpec
+from hylo.core.types import EnvSpec, Observation
 
 # openpi observation key -> our observation field: "camera:<name>", "state:<key>=<n>,<key>=<n>" (split a flat
 # vector into named state entries), or "instruction". The inverse of the openpi client's presets.
@@ -147,14 +147,14 @@ class PolicyServer:
                 return connection.respond(http.HTTPStatus.UNAUTHORIZED, "unauthorized\n")
         if path == "/meta":
             return connection.respond(http.HTTPStatus.OK, json.dumps(self.metadata(), default=str) + "\n")
-        if path not in ("/wc", "/openpi", "/"):
+        if path not in ("/hylo", "/wc", "/openpi", "/"):            # /wc: the path before the rename to Hylo
             return connection.respond(http.HTTPStatus.NOT_FOUND, "paths: /wc, /openpi, /meta, /healthz\n")
         return None
 
     def metadata(self) -> dict[str, Any]:
         spec: AgentSpec = self.served.agent.spec()
-        return {"server": "worldcurrent.policy@0.1", "agent": spec.model_dump(mode="json"), "version": self.served.version,
-                "protocols": ["wc.agentserver/v0.1", "openpi"], "openpi_inputs": self.openpi_inputs,
+        return {"server": "hylo.policy@0.1", "agent": spec.model_dump(mode="json"), "version": self.served.version,
+                "protocols": ["hylo.agentserver/v0.1", "openpi"], "openpi_inputs": self.openpi_inputs,
                 "action_dim": spec.action_dim}
 
     # -- sessions ------------------------------------------------------------------------------------
@@ -168,13 +168,13 @@ class PolicyServer:
             self.sessions += 1
             path = conn.request.path.split("?")[0]
             self.log(f"[policy] session from {conn.remote_address} on {path}")
-            (self._openpi if path == "/openpi" else self._wc)(conn)
+            (self._openpi if path == "/openpi" else self._hylo)(conn)
         except Exception as exc:  # noqa: BLE001 - one bad session must not take the server down
             self.log(f"[policy] session dropped: {exc!r}")
         finally:
             self._session.release()
 
-    def _wc(self, conn) -> None:
+    def _hylo(self, conn) -> None:
         handler = _CheckedHandler(self.served.agent)
         conn.send(json.dumps({"hello": handler.protocol, "transport": "ws", "version": self.served.version}))
         for frame in conn:
@@ -216,7 +216,7 @@ class PolicyServer:
         self._server = wss.serve(self._handle, self.host, self.port, max_size=None, compression=None,
                                  process_request=self._process_request)
         self.port = self._server.socket.getsockname()[1]
-        threading.Thread(target=self._server.serve_forever, daemon=True, name="wc-policy-server").start()
+        threading.Thread(target=self._server.serve_forever, daemon=True, name="hylo-policy-server").start()
         self.log(f"[policy] ws://{self.host}:{self.port}/wc and /openpi (version {self.served.version})")
         return self
 

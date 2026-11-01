@@ -1,4 +1,4 @@
-"""A real robot as a worldcurrent Environment, through LeRobot's Robot interface (S3).
+"""A real robot as a Hylo Environment, through LeRobot's Robot interface (S3).
 
 Any LeRobot robot works (SO-100/101 and Koch followers, LeKiwi, OpenArm, ...; ROS 2 robots through LeRobot's
 third-party plugins such as lerobot_robot_ros2_zenoh), and so does SimulatedArm for bring-up without hardware.
@@ -32,8 +32,8 @@ from typing import Any
 
 import numpy as np
 
-from worldcurrent.core.task import TaskInstance
-from worldcurrent.core.types import (Action, ActionSemantics, BoxSpace, EnvCapabilities, EnvSpec, Observation,
+from hylo.core.task import TaskInstance
+from hylo.core.types import (Action, ActionSemantics, BoxSpace, EnvCapabilities, EnvSpec, Observation,
                                      ObservationSpec, StepResult)
 
 # LeRobot config type -> the robots subpackage that registers it

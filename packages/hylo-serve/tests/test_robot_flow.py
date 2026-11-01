@@ -6,8 +6,8 @@ import time
 
 from fastapi.testclient import TestClient
 
-from worldcurrent.serve.policy import PolicyServer
-from worldcurrent.serve.workcell import WorkcellConfig, create_app
+from hylo.serve.policy import PolicyServer
+from hylo.serve.workcell import WorkcellConfig, create_app
 
 
 def test_operator_confirms_reset_and_labels_a_robot_episode(tmp_path):

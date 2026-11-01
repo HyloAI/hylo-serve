@@ -4,8 +4,8 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from worldcurrent.serve.policy import PolicyServer
-from worldcurrent.serve.workcell import WorkcellConfig, create_app
+from hylo.serve.policy import PolicyServer
+from hylo.serve.workcell import WorkcellConfig, create_app
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def test_estop_latches_and_blocks_new_episodes_until_cleared(tmp_path, policy):
     assert c.post("/operator", json={"type": "estop", "by": "t"}).json()["state"] == "fault"
     r = c.post("/episodes", json={"task_id": task, "seed": 10000})
     assert r.status_code == 409 and "latched" in r.json()["detail"]
-    assert c.post("/operator", json={"type": "launch"}).status_code == 400          # wc.workcell/v0.1 events only
+    assert c.post("/operator", json={"type": "launch"}).status_code == 400          # hylo.workcell/v0.1 events only
     assert c.post("/episodes", json={"task": task}).status_code == 400
     c.post("/operator", json={"type": "clear_fault"})
     assert c.post("/episodes", json={"task_id": task, "seed": 10000}).status_code == 200
@@ -66,7 +66,7 @@ def test_estop_latches_and_blocks_new_episodes_until_cleared(tmp_path, policy):
 
 def test_a_dead_policy_endpoint_fails_cleanly(tmp_path, policy):
     cfg = WorkcellConfig.model_validate({**_cfg(tmp_path, policy).model_dump(mode="json"),
-                                         "policy": {"url": "ws://127.0.0.1:9/wc", "params": {"connect_timeout_s": 1}}})
+                                         "policy": {"url": "ws://127.0.0.1:9/hylo", "params": {"connect_timeout_s": 1}}})
     c = TestClient(create_app(cfg))
     c.post("/episodes", json={"task_id": c.get("/status").json()["tasks"][0][0]})
     st = _wait_idle(c)

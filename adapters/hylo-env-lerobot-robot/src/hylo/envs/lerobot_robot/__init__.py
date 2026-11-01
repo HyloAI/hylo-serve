@@ -1,6 +1,6 @@
-# contract versions and what is known about these plugins (worldcurrent.core.plugins)
+# contract versions and what is known about these plugins (hylo.core.plugins)
 META = {
-    "contracts": {"envs": "wc.env/v0.1", "agents": "wc.agent/v0.1"},
+    "contracts": {"envs": "hylo.env/v0.1", "agents": "hylo.agent/v0.1"},
     "maturity": "implemented",
     "plugins": {
         "envs/lerobot.robot": {

@@ -3,10 +3,10 @@ import json
 import pytest
 import websockets.sync.client as wsc
 
-from worldcurrent.eval.experiment import run_experiment
-from worldcurrent.core.config import ExperimentConfig
-from worldcurrent.core.remote import wire
-from worldcurrent.serve.policy import PolicyServer
+from hylo.eval.experiment import run_experiment
+from hylo.core.config import ExperimentConfig
+from hylo.core.remote import wire
+from hylo.serve.policy import PolicyServer
 
 AGENT = {"type": "testing.p_controller", "params": {"kp": 2.0}}
 CFG = ExperimentConfig(name="ps", benchmark={"type": "testing/reach-v0", "params": {"tags": ["reach"]}},
@@ -30,7 +30,7 @@ def test_a_served_agent_behaves_like_the_local_one(server, tmp_path):
 
 def test_an_incompatible_environment_is_refused_before_any_action(server):
     with wsc.connect(f"ws://127.0.0.1:{server.port}/wc") as ws:
-        assert json.loads(ws.recv())["hello"] == "wc.agentserver/v0.1"
+        assert json.loads(ws.recv())["hello"] == "hylo.agentserver/v0.1"
         env_spec = {"name": "other", "version": "1", "control_hz": 10,
                     "observation": {"state": {"joint_pos": [6]}}, "action": {"shape": [6], "low": [-1] * 6, "high": [1] * 6}}
         ws.send(json.dumps({"id": 1, "method": "reset", "args": {"episode_id": "e", "seed": 0, "env_spec": env_spec,
@@ -40,11 +40,11 @@ def test_an_incompatible_environment_is_refused_before_any_action(server):
 
 
 def test_openpi_clients_can_run_our_agents(server, tmp_path):
-    from worldcurrent.policies.openpi.agent import OpenPIAgent
+    from hylo.policies.openpi.agent import OpenPIAgent
 
     client = OpenPIAgent(url=f"ws://127.0.0.1:{server.port}/openpi", preset=None, image_size=None, action_dim=2,
                          execution_steps=1, inputs={"observation/state": "state:pos,vel,goal,goal_visible", "prompt": "instruction"})
-    assert client.metadata["server"].startswith("worldcurrent.policy")
+    assert client.metadata["server"].startswith("hylo.policy")
     via_openpi = run_experiment(CFG, run_root=tmp_path, label="openpi", agent=client)
     local = run_experiment(CFG, run_root=tmp_path, label="local")
     assert via_openpi.per_key() == local.per_key()
@@ -62,7 +62,7 @@ def test_one_session_at_a_time(server):
 
 
 def test_following_a_campaign_rebuilds_the_agent_between_sessions(tmp_path, monkeypatch):
-    from worldcurrent.evolve.campaign import EvolveConfig, run_campaign, rollback
+    from hylo.evolve.campaign import EvolveConfig, run_campaign, rollback
 
     monkeypatch.chdir(tmp_path)
     (tmp_path / "exp.yaml").write_text(json.dumps(CFG.with_overrides({"agent.params.kp": 0.5}).model_dump(mode="json")))
@@ -78,7 +78,7 @@ def test_following_a_campaign_rebuilds_the_agent_between_sessions(tmp_path, monk
 
 
 def test_following_reads_only_the_active_version_file(tmp_path):
-    from worldcurrent.core.deployment import ActiveVersion, write_active
+    from hylo.core.deployment import ActiveVersion, write_active
 
     write_active(tmp_path, ActiveVersion(campaign="c", version=None, agent={**AGENT, "params": {"kp": 0.5}}))
     s = PolicyServer(campaign=str(tmp_path), port=0, log=lambda m: None)
