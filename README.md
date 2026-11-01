@@ -1,10 +1,36 @@
-# hylo-serve
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.svg">
+    <img src=".github/assets/banner-light.svg" width="100%" alt="hylo-serve: policies on robots in real time, within the safety limits you set">
+  </picture>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-c8442d?style=flat-square"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-171c22?style=flat-square&logo=python&logoColor=white">
+  <img alt="Depends on hylo-core only" src="https://img.shields.io/badge/depends%20on-hylo--core%20only-171c22?style=flat-square">
+  <img alt="Workcell API: hylo.workcell/v0.1" src="https://img.shields.io/badge/workcell%20API-v0.1-5b6168?style=flat-square">
+</p>
+
+<p align="center">
+  <a href="https://hyloai.github.io/"><b>Website</b></a> ·
+  <a href="https://hyloai.github.io/hylo-docs/"><b>Docs</b></a> ·
+  <a href="https://hyloai.github.io/hylo-docs/getting-started/quickstart/"><b>Quickstart</b></a> ·
+  <a href="https://github.com/HyloAI"><b>All repositories</b></a>
+</p>
 
 Part of [Hylo](https://hyloai.github.io/), the stack for physical AI. This repository is **Hylo Serve**, the
 **runtime** layer.
 
 Deployment: what runs next to a robot and on the GPU box that serves its policy. By default its packages depend on
 `hylo-core` only, so a robot computer installs nothing else.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/topology-dark.svg">
+    <img src=".github/assets/topology-light.svg" width="100%" alt="Deployment: Studio on the workstation talks HTTP to hylo serve workcell on the robot computer (real-time runner, SafetyShield, operator channel, robot adapter), which talks WebSocket to hylo serve policy on a GPU box; runs go to the store">
+  </picture>
+</p>
 
 | Package | Purpose |
 |---|---|
@@ -22,6 +48,15 @@ Interfaces (defined in hylo-core, so callers never import this repository): the 
 (`core.deployment`). Architecture and the real-robot path: hylo-docs, docs/design/architecture.md §3.8.
 
 Documentation (hylo-docs, `uv run mkdocs serve -f docs/mkdocs.yml` from the workspace): [deployment](../docs/docs/user-guide/deployment.md), [safety](../docs/docs/user-guide/safety.md), [deployments repository](../docs/docs/configuration/deployments-repo.md).
+
+## The Hylo stack
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/stack-dark.svg">
+    <img src=".github/assets/stack-light.svg" width="100%" alt="The six layers of the Hylo stack; hylo-serve is the runtime layer, with the deployments template">
+  </picture>
+</p>
 
 ## License
 
