@@ -19,3 +19,7 @@ Interfaces (defined in hylo-core, so callers never import this repository): the 
 (`core.deployment`). Architecture and the real-robot path: hylo-docs, docs/design/architecture.md §3.8.
 
 Documentation (hylo-docs, `uv run mkdocs serve -f docs/mkdocs.yml` from the workspace): [deployment](../docs/docs/user-guide/deployment.md), [safety](../docs/docs/user-guide/safety.md), [deployments repository](../docs/docs/configuration/deployments-repo.md).
+
+## License
+
+Apache License 2.0 (see [LICENSE](LICENSE)). Copyright 2026 Hylo AI.
