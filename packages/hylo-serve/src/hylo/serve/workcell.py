@@ -27,6 +27,8 @@ import io
 import json
 import threading
 import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -271,8 +273,16 @@ class Workcell:
 
 
 def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
-    app = FastAPI(title=f"Hylo workcell {cfg.name}")
     cell = Workcell(cfg)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        try:
+            yield
+        finally:
+            cell.close()
+
+    app = FastAPI(title=f"Hylo workcell {cfg.name}", lifespan=lifespan)
     app.state.workcell = cell
 
     @app.middleware("http")
@@ -336,10 +346,6 @@ def create_app(cfg: WorkcellConfig, *, token: str | None = None) -> FastAPI:
             pass
         finally:
             cell.unsubscribe(q)
-
-    @app.on_event("shutdown")
-    def _close() -> None:
-        cell.close()
 
     return app
 
