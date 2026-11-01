@@ -1,5 +1,8 @@
 # hylo-serve
 
+Part of [Hylo](https://hyloai.github.io/), the stack for physical AI. This repository is **Hylo Serve**, the
+**runtime** layer.
+
 Deployment: what runs next to a robot and on the GPU box that serves its policy. By default its packages depend on
 `hylo-core` only, so a robot computer installs nothing else.
 
