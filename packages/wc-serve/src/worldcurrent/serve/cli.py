@@ -17,7 +17,8 @@ def main(argv: Sequence[str]) -> int:
         from worldcurrent.core.remote import ws
 
         return ws.main(list(argv))
-    ap = argparse.ArgumentParser(prog="wc serve")
+    ap = argparse.ArgumentParser(prog="wc serve", epilog="also: wc serve env|agent ... serves one environment or agent "
+                                                       "plugin over WebSocket (wc serve env --help)")
     sub = ap.add_subparsers(dest="role", required=True)
     p = sub.add_parser("policy", help="serve an agent over /wc and /openpi")
     src = p.add_mutually_exclusive_group(required=True)

@@ -15,7 +15,7 @@ What the adapter adds on top of LeRobot's Robot:
 
     env:
       type: lerobot.robot
-      remote: {python: envs/robot/.venv/bin/python}            # the venv with lerobot and the robot SDK
+      remote: {runtime: robot}            # the profile's runtime: the venv with lerobot and the robot SDK
       params:
         robot: {type: so101_follower, params: {port: /dev/ttyACM0, id: arm1, max_relative_target: 10}}
         cameras: {front: agentview, wrist: wrist}

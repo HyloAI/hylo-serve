@@ -16,4 +16,6 @@ uv run wc serve policy --campaign ../bench/runs/evolve/<campaign> --port 8001   
 
 Interfaces (defined in wc-core, so callers never import this repository): the workcell API wc.workcell/v0.1
 (`core.remote.workcell`), the policy protocols (`core.remote`, `core.remote.wire`) and a campaign's active version
-(`core.deployment`). Architecture and the real-robot path: worldcurrent-docs, design/architecture.md §3.8.
+(`core.deployment`). Architecture and the real-robot path: worldcurrent-docs, docs/design/architecture.md §3.8.
+
+Documentation (worldcurrent-docs, `uv run mkdocs serve -f docs/mkdocs.yml` from the workspace): [deployment](../docs/docs/user-guide/deployment.md), [safety](../docs/docs/user-guide/safety.md), [deployments repository](../docs/docs/configuration/deployments-repo.md).
