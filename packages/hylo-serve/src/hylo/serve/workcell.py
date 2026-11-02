@@ -92,6 +92,7 @@ class _Instruction:
 
     def __init__(self, inner: Any, instruction: str | None) -> None:
         self.inner, self.instruction = inner, instruction
+        self.end_error: str | None = None
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.inner, name)
@@ -100,6 +101,14 @@ class _Instruction:
         if self.instruction:
             observation = observation.model_copy(update={"instruction": self.instruction})
         return self.inner.act(observation)
+
+    def on_episode_end(self, outcome) -> None:
+        # The episode is over and its end is in the trace: a policy connection lost by now (the usual reason the
+        # episode failed) must not keep the episode out of the run.
+        try:
+            self.inner.on_episode_end(outcome)
+        except Exception as exc:  # noqa: BLE001
+            self.end_error = f"{type(exc).__name__}: {exc}"[:400]
 
 
 class Workcell:
@@ -225,6 +234,8 @@ class Workcell:
             last = {"episode_id": res.outcome.episode_id, "status": res.extra["status"], "steps": res.outcome.steps,
                     "holds": res.holds, "chunks": res.chunks, "safety_interventions": res.safety_interventions,
                     "verdict": res.verdict, "reason": res.outcome.termination_reason}
+            if agent.end_error:
+                last["policy_error"] = agent.end_error
             self._record(task, res, policy, override)
             self.status = {"state": "fault" if self.operator.fault else "idle", "episode": None, "last": last}
             self._broadcast({"type": "done", **_num(last), "run_id": self.run_dir.name})

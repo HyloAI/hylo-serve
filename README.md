@@ -25,6 +25,13 @@ Part of [Hylo](https://hyloai.github.io/), the stack for physical AI. This repos
 Deployment: what runs next to a robot and on the GPU box that serves its policy. By default its packages depend on
 `hylo-core` only, so a robot computer installs nothing else.
 
+Serve runs selected implementations in the [robot-skill lifecycle](https://hyloai.github.io/hylo-docs/user-guide/skills/).
+A campaign-following policy server
+can serve an active agent version when its agent package, model assets and robot contract are available. Validate
+those requirements before deploying a program strategy. The new manipulation programs have been measured in
+simulation; their promotion does not establish physical-robot readiness. See
+[strategy development](https://hyloai.github.io/hylo-docs/user-guide/developing-strategies/).
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset=".github/assets/topology-dark.svg">
